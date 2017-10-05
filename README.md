@@ -1,10 +1,10 @@
-# client
-cd client
-npm install
-npm run dev
+## client
+#cd client
+#npm install
+#npm run dev
 
-# server
+## server
 
-cd server
-npm install
-npm run start
+#cd server
+#npm install
+#npm run start

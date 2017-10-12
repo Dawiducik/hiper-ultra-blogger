@@ -10,7 +10,7 @@ module.exports = (sequelize, dataTypes) => {
       required: true
     },
     body: {
-      type: dataTypes.STRING(2500),
+      type: dataTypes.TEXT,
       required: true
     },
     friendlyUrl: {

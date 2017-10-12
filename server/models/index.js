@@ -1,9 +1,10 @@
 const Sequelize = require('sequelize');
-const config = require('../config/index').database;
+const config = require('../config/index');
+const bcrypt = require('bcrypt');
 let database = {};
-const sequelize = new Sequelize(config.dbName, config.username, config.password, {
-  host: config.host,
-  dialect: config.type,
+const sequelize = new Sequelize(config.database.dbName, config.database.username, config.database.password, {
+  host: config.database.host,
+  dialect: config.database.type,
   pool: {
     max: 5,
     min: 0,
@@ -29,62 +30,18 @@ sequelize
 .catch(err => {
   console.error('Unable to connect to the db: ', err);
 });
-
-database.sequelize.sync({force: true}).then(() => {
-  return User.create({
-    username: 'Dawiducikerson'
-  })
+const hash = bcrypt.hashSync('haslo1', config.password.saltRounds);
+database.sequelize
+  .sync({ force: true })
   .then(() => {
-    return User.create({
-      username: 'Pawelek1'
+    User.create({
+      username: 'Dawid3k',
+      password: hash,
     })
-  })
-  .then(() => {
-    return User.create({
-      username: 'Ponczek'
-    })
-  })
-  .then(() => {
-    let user = User.findOne({
-      where: {
-        username: 'Pawelek1'
-      }
-    }).then((user) => {
-      return Post.create({
-        title: 'Witam na stronie 2',
-        body: '<p> witam xDDD</p>',
-        friendlyUrl: 'witam-na-stronie-xd',
-        UserId: user.id
-      });
-    });
-  })
-  .then(() => {
-    let user = User.findOne({
-      where: {
-        username: 'Ponczek'
-      }
-    }).then((user) => {
-      return Post.create({
-        title: 'Witam na stronie 3',
-        body: '<p> witam xDDD agadg</p>',
-        friendlyUrl: 'witam-na-stronie-xd-xdd',
-        UserId: user.id
-      });
-    });
-  })
-  .then(() => {
-    let user = User.findOne({
-      where: {
-        username: 'Dawiducikerson',
-      }
-    }).then((user) => {
-      return Post.create({
-        title: 'Witam na stronie 3',
-        body: '<p> witam xDDD agadg</p>',
-        friendlyUrl: 'witam-na-stronie-xd-xdd-2',
-        UserId: user.id
-      });
+    .catch(err => {
+      console.log(err);
     });
   });
-});
+
 module.exports = database;
+

@@ -1,6 +1,8 @@
 <template lang="pug">
   div
-    .jumbotron
+    div(v-if="isLoading") Loading... 
+    div(v-if="error") Error {{ error }}
+    .jumbotron(v-if="post")
       h1.display-3 {{ post.title }}
       p.lead
         div(v-html="post.body")
@@ -16,24 +18,35 @@
 
 </template>
 <script>
+import http from '@/providers/http';
+
 export default {
   name: 'showPost',
   data() {
     return {
-      post: {},
+      isLoading: false,
+      error: null,
+      post: null,
     };
   },
   methods: {
     loadPost() {
+      this.loading = true;
       const friendlyUrl = this.$route.params.friendlyUrl;
-      this.$http.get(`http://localhost:8081/api/posts/${friendlyUrl}`)
-      .then(response => response.json())
-      .then((post) => {
-        this.post = post;
+      http({
+        url: `http://localhost:8081/api/posts/${friendlyUrl}`,
+        method: 'get',
+      })
+      .then((res) => {
+        this.post = res.data;
+      })
+      .catch((res) => {
+        this.error = res.data.message;
       });
+      this.isLoading = false;
     },
   },
-  beforeMount() {
+  created() {
     this.loadPost();
   },
 };

@@ -23,7 +23,7 @@ router.post('/users/login', (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   if(!username || !password) {
-    res.json({
+    return res.json({
       success: false,
       message: 'Dont even try ( ͠° ͟ʖ ͡°)'
     });
@@ -37,20 +37,22 @@ router.post('/users/login', (req, res) => {
     const hash = user.password;
     bcrypt.compare(password, hash)
     .then((response) => {
-      if(!response) res.json({
+      if(!response) 
+      return res.json({
         success: false,
         message: 'An error occured: invalid username and/or password.'
       });
       let token = jwt.sign({ user }, config.jwtToken.secretKey);
-      res.json({
+      return res.json({
         success: true,
         message: 'Enjoy your token ヽ༼ຈل͜ຈ༽ﾉ',
-        token
+        token,
+        user,
       });
     });
   })
   .catch(() => {
-    res.json({ 
+    return res.json({ 
       success: false,
       message: 'An error occured: invalid username and/or password.'
     });
@@ -66,29 +68,43 @@ router.post('/users/register', (req, res) => {
       message: 'An error occured.'
     });
   }
-  bcrypt.hash(password, config.password.saltRounds)
-  .then((hash) => {
-    db.User.create({
-      username: username,
-      password: hash,
-    })
-    .then(() => {
-      res.json({
-        success: true,
-        message: `Account ${username} has been registered successfully!`
-      });
-    })
-    .catch(err => {
-      res.json({
+
+  db.User.findAll({
+    where: {
+      username: db.sequelize.where(db.sequelize.fn('LOWER', db.sequelize.col('username')), 'LIKE', username.toLowerCase()),
+    },
+  })
+  .then(user => {
+    if (user.length) {
+      return res.json({
         success: false,
         message: `An error occured: user with this credentials already exists.`
       });
-    })  ;
-  })
-  .catch(() => {
-    res.json({
-      success: false,
-      message: `An error occured.`
+    }
+    bcrypt.hash(password, config.password.saltRounds)
+    .then((hash) => {
+      db.User.create({
+        username: username,
+        password: hash,
+      })
+      .then(() => {
+        res.json({
+          success: true,
+          message: `Account ${username} has been registered successfully!`
+        });
+      })
+      .catch(err => {
+        res.json({
+          success: false,
+          message: `An error occured: user with this credentials already exists.`
+        });
+      });
+    })
+    .catch(() => {
+      res.json({
+        success: false,
+        message: `An error occured.`
+      });
     });
   });
 });
@@ -130,8 +146,6 @@ router.get('/posts/:page/:amount', (req, res) => {
   const amount = req.params.amount;
 });
 
-// router.use(adminMiddleware);
-
 router.get('/posts', (req, res) => {
   db.Post
   .findAll({
@@ -139,18 +153,18 @@ router.get('/posts', (req, res) => {
       ['createdAt', 'DESC']
     ],
     raw: true,
-    attributes: ['title', 'body', 'createdAt', 'friendlyUrl'],
+    attributes: ['id', 'title', 'body', 'createdAt', 'friendlyUrl'],
     include: [{
-        model: db.User,
-        where: {
-          id: db.sequelize.col('Post.UserId')
-        },
-        attributes: ['username']
-    }]
+      model: db.User,
+      attributes: ['username'],
+    }],
+    
   })
   .then(posts => res.json(posts));
   // res.send('posts -> wysyłanie danych przez POST i utworzenie postu');
 });
+
+router.use(adminMiddleware);
 
 router.post('/posts', (req, res) => {
   const title = req.body.title;
@@ -173,46 +187,57 @@ router.post('/posts', (req, res) => {
   //   body,
   //   friendlyUrl
   // });
-  db.User.findOne()
-  .then((user) => {
-    db.Post.create({
-      title: title,
-      body: body,
-      friendlyUrl: friendlyUrl,
-      UserId: user.id
-    })
-    .then(() => {
-      res.json({
-        success: true,
-        message: 'Post created successfully.'
-      });
-    })
-    .catch(() => {
-      res.json({
-        success: false,
-        message: 'An error occured.'
-      });
+  const user = req.user.id;
+  console.log(user);
+  db.Post.create({
+    title: title,
+    body: body,
+    friendlyUrl: friendlyUrl,
+    UserId: req.user.id,
+  })
+  .then((post) => {
+    console.log(`Post ${post.title} zostal stworzony pomyslnie!`);
+    res.json({
+      success: true,
+      message: 'Post created successfully.'
     });
   })
-  .catch(() => {
+  .catch((err) => {
+    console.log(`Nie powiodlo sie utworzenie posta :(`);
     res.json({
       success: false,
-      message: 'An error occured.'
+      message: 'An error occured.',
     });
   });
-
-  // db.Post.create({
-
-  // })
 });
 
 
-router.put('/posts/:friendlyUrl', (req, res) => {
-  res.send(`post -> update posta od id ${req.params.friendlyUrl}`);
+router.put('/posts/:id', (req, res) => {
+  res.send(`post -> update posta od id ${req.params.id}`);
 });
 
-router.delete('/posts/:friendlyUrl', (req, res) => {
-  res.send(`post -> usuniecie posta z id ${req.params.friendlyUrl}`);
+router.delete('/posts/:id', (req, res) => {
+  const postID = req.params.id;
+  db.Post.findOne({
+    where: {
+      id: postID,
+    }
+  })
+  .then((post) => {
+    return post.destroy();
+  })
+  .then(() => {
+    return res.json({
+      success: true,
+      message: 'Post deleted successfully.',
+    });
+  })
+  .catch((err) => {
+    return res.json({
+      success: false,
+      message: err,
+    });
+  });
 });
 
 /*

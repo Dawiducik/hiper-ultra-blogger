@@ -1,7 +1,9 @@
 <template lang="pug">
   div.container
-    div(v-if="isApiOnline")
-      a.btn.btn-block.btn-primary(href="./post/dodaj") Dodaj postaa
+    div(v-if="isLoading") Loading...
+    div(v-if="error") {{ error }}
+    div(v-if="posts")
+      a.btn.btn-block.btn-primary(href="./panel/posty/dodaj") Dodaj postaa
       .row(v-for="post in posts")
         .col-md-12
           post(
@@ -11,10 +13,13 @@
             :author="post['User.username']",
             :friendlyUrl="post.friendlyUrl"
           )
-    div(v-else) api offline
+    div 
+      a.btn.btn-primary(href="./zaloguj") Zaloguj się
+      a.btn.btn-success(href="./panel") Dashboard
 </template>
 <script>
 import Post from '@/components/Post';
+import http from '@/providers/http';
 
 export default {
   name: 'index',
@@ -23,24 +28,29 @@ export default {
   },
   data() {
     return {
-      isApiOnline: true,
-      posts: [],
+      posts: null,
+      isLoading: false,
+      error: null,
     };
   },
   methods: {
     loadPosts() {
-      this.$http.get('http://localhost:8081/api/posts')
-      .then(response => response.json())
-      .then((posts) => {
-        this.posts = posts;
-        console.log(this.posts);
-      }, (response) => {
-        this.isApiOnline = false;
-        console.log(response);
+      this.isLoading = true;
+      http({
+        url: 'http://localhost:8081/api/posts',
+        method: 'get',
+      })
+      .then((res) => {
+        this.posts = res.data;
+      })
+      .catch(() => {
+        this.error = 'Błąd przy wczytywaniu postów';
       });
+
+      this.isLoading = false;
     },
   },
-  beforeMount() {
+  created() {
     this.loadPosts();
   },
 };

@@ -13,7 +13,7 @@ let database = {};
 //   // SQLite only
 //   storage: 'path/to/database.sqlite'
 // });
-const sequelize;
+let sequelize;
 if(process.env.POSTGRES_URL) {
   sequelize = new Sequelize(process.env.POSTGRES_URL);
 } else {

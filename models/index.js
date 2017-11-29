@@ -15,7 +15,12 @@ let database = {};
 // });
 let sequelize;
 if(process.env.POSTGRES_URL) {
-  sequelize = new Sequelize(process.env.POSTGRES_URL);
+  sequelize = new Sequelize(process.env.POSTGRES_URL, {
+    dialect: 'postgres',
+    dialectOptions: {
+      ssl: true
+    }
+  });
 } else {
   sequelize = new Sequelize(process.env.DATABASE_NAME || config.database.dbName, process.env.DATABASE_USERNAME || config.database.username, process.env.DATABASE_PASSWORD || config.database.password, {
     host: process.env.DATABASE_HOSTNAME || config.database.host,

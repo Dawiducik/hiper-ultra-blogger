@@ -14,8 +14,8 @@ let database = {};
 //   storage: 'path/to/database.sqlite'
 // });
 let sequelize;
-if(process.env.POSTGRES_URL) {
-  sequelize = new Sequelize(process.env.POSTGRES_URL, {
+if(process.env.DATABASE_URL) {
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     dialectOptions: {
       ssl: true

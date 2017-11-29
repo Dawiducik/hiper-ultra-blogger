@@ -13,7 +13,22 @@ let database = {};
 //   // SQLite only
 //   storage: 'path/to/database.sqlite'
 // });
-const sequelize = new Sequelize('postgres://abcalcdsmhyblm:ae6413082cf096ad3337459ceda1c5d860da0114843915e644522b98cbfa0b2b@ec2-54-75-224-100.eu-west-1.compute.amazonaws.com:5432/dfqtcigikfbesg');
+const sequelize;
+if(process.env.POSTGRES_URL) {
+  sequelize = new Sequelize(process.env.POSTGRES_URL);
+} else {
+  sequelize = new Sequelize(process.env.DATABASE_NAME || config.database.dbName, process.env.DATABASE_USERNAME || config.database.username, process.env.DATABASE_PASSWORD || config.database.password, {
+    host: process.env.DATABASE_HOSTNAME || config.database.host,
+    dialect: process.env.DATABASE_TYPE || config.database.type,
+    pool: {
+      max: 5,
+      min: 0,
+      idle: 10000
+    },
+    // SQLite only
+    storage: 'path/to/database.sqlite'
+  });
+}
 database.sequelize = sequelize;
 
 const User = sequelize.import('./User.js');

@@ -11,6 +11,9 @@
       label(for="friendlyUrlInput") Przyjazny adres
       input#friendlyUrlInput.form-control(type="text", name="friendlyUrl", v-model="friendlyUrl")
     .form-group
+      label(for="tagsInput") Tagi (oddzielane spacją)
+      input#tagsInput.form-control(type="text", name="tags", v-model="tags")
+    .form-group
       button.btn.btn-primary.btn-block(@click.prevent="savePost")
         span(v-if="isLoading") Rejestruję... 
           icon(v-if="isLoading", name="circle-o-notch", scale="1", spin) 
@@ -40,18 +43,20 @@ export default {
       title: '',
       body: '',
       friendlyUrl: '',
+      tags: '',
     };
   },
   methods: {
     savePost() {
       this.isLoading = true;
       http({
-        url: 'http://localhost:8081/api/posts',
+        url: `${this.$store.getters.apiUrl}/posts`,
         method: 'post',
         data: {
           title: this.title,
           body: this.body,
           friendlyUrl: this.friendlyUrl,
+          tags: this.tags,
         },
         headers: {
           'Content-Type': 'application/json;charset=utf-8',

@@ -1,20 +1,11 @@
 <template lang="pug">
-  div Użytkownik 
-    strong {{ user.username }} 
-    span ID: 
-    strong {{ user.id }}
+  div.container-fluid 
+    h1 WITAJ W PANELU STEROWANIA!
 
 </template>
 <script>
-import Auth from '@/services/auth';
-
 export default {
   name: 'indexPanel',
-  computed: {
-    user() {
-      return Auth.getProfile();
-    },
-  },
 };
 </script>
 <style lang="scss">

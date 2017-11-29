@@ -1,5 +1,6 @@
 <template lang="pug">
   .container
+    loading-spinner
     .row
       .col-3
       .col-6.mvh-100.d-flex.align-items-center
@@ -47,9 +48,13 @@
 </template>
 <script>
 import Auth from '@/services/auth';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default {
   name: 'register',
+  components: {
+    LoadingSpinner,
+  },
   data() {
     return {
       isLoading: false,

@@ -10,7 +10,11 @@ const config = {
     saltRounds: 10 //ilość rund przy hashowaniu hasła 
   },
   jwtToken: {
-    secretKey: 'twojsekretnytokendotworzeniajwttoteknow' //przy tworzeniu JWT tokenu podany jest do walidacji sygnatury
+    secretKey: 'twojsekretnytokendotworzeniajwttoteknow', //przy tworzeniu JWT tokenu podany jest do walidacji sygnatury
+    options: {
+      expiresIn: '24h',
+      issuer: 'twojissuer'
+    },
   }
 }
 

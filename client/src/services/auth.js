@@ -12,6 +12,9 @@ const Auth = {
   setToken(token) {
     localStorage.setItem('token', token);
   },
+  getToken() {
+    return localStorage.getItem('token');
+  },
   removeToken() {
     localStorage.removeItem('token');
   },
@@ -28,6 +31,12 @@ const Auth = {
   logout() {
     this.removeProfile();
     this.removeToken();
+  },
+  isAuthenticated() {
+    if (localStorage.getItem('token')) {
+      return true;
+    }
+    return false;
   },
 };
 

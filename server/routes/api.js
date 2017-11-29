@@ -1,5 +1,6 @@
 const express = require('express');
-const router = express.Router();
+const openRouter = express.Router();
+const authRouter = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const loremIpsum = require('lorem-ipsum');
@@ -10,16 +11,19 @@ const config = require('../config');
 // router.use((req, res, next) => {
 //   req.accepts('application/json');
 // });
-router.get('/', (req, res) => {
-  res.send('api v1');
+openRouter.get('/', (req, res) => {
+  res
+    .status(200)
+    .send('api v1');
 });
+authRouter.use(adminMiddleware);
 // router.use((req, res, next) => {
 
 // });
 /*
 * users api
 */
-router.post('/users/login', (req, res) => {
+openRouter.post('/users/login', (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   if(!username || !password) {
@@ -42,7 +46,7 @@ router.post('/users/login', (req, res) => {
         success: false,
         message: 'An error occured: invalid username and/or password.'
       });
-      let token = jwt.sign({ user }, config.jwtToken.secretKey);
+      let token = jwt.sign({ user }, config.jwtToken.secretKey, config.jwtToken.options);
       return res.json({
         success: true,
         message: 'Enjoy your token ヽ༼ຈل͜ຈ༽ﾉ',
@@ -58,8 +62,35 @@ router.post('/users/login', (req, res) => {
     });
   });
 });
-
-router.post('/users/register', (req, res) => {
+authRouter.get('/users/profile', (req, res) => {
+  const user = req.user;
+  db.User.findOne({
+    where: {
+      id: user.id
+    },
+    attributes: [
+      'username',
+      'updatedAt',
+      'createdAt'
+    ]
+  })
+  .then((user) => {
+    return res.json({ 
+      success: true,
+      user,
+    });
+  })
+  .catch(err => {
+    throw Error('User not found in db');
+    console.log('ID:' + user.id);
+    return res.json({
+      success: false,
+      message: 'Profile does not exists.'
+    });
+  });
+})
+/*
+openRouter.post('/users/register', (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   if(!username || !password) {
@@ -108,11 +139,43 @@ router.post('/users/register', (req, res) => {
     });
   });
 });
-
+*/
 /*
 * posts api
 */
-router.get('/posts/:friendlyUrl', (req, res) => {
+openRouter.get('/posts', (req, res) => {
+  db.Post
+  .findAll({
+    order: [
+      ['createdAt', 'DESC']
+    ],
+    // raw: true,
+    attributes: ['id', 'title', 'body', 'createdAt', 'friendlyUrl'],
+    include: [
+      { 
+        model: db.Tag,
+        attributes: ['name'] 
+      },
+      {
+        model: db.User,
+        attributes: ['username']
+      }
+    ]
+    // include: [{
+    //   model: db.Tag,
+    //   through: 'postTags',
+    //   where: {
+    //     name: ''
+    //   }
+    // }]
+
+    
+  })
+  .then(posts => res.json(posts));
+  // res.send('posts -> wysyłanie danych przez POST i utworzenie postu');
+});
+
+openRouter.get('/posts/furl/:friendlyUrl', (req, res) => {
   db.Post.findOne({
     where: {
       friendlyUrl: req.params.friendlyUrl
@@ -136,37 +199,39 @@ router.get('/posts/:friendlyUrl', (req, res) => {
   // res.send(`post o id ${req.params.friendlyUrl}->  pobiera informacje o poście tj. tło, treść, autor itp...`);
 });
 
-
-
-
-
-router.get('/posts/:page/:amount', (req, res) => {
+openRouter.get('/posts/pagination/:page/:amount', (req, res) => {
   res.send(`posty o ilosci ${req.params.amount} na stronie ${req.params.page}-> pobiera odpowiednia stronę postów z ilością na jednej`);
   const page = req.params.page;
   const amount = req.params.amount;
 });
 
-router.get('/posts', (req, res) => {
+openRouter.get('/posts/tag/:tag', (req, res) => {
+  const tag = req.params.tag;
   db.Post
   .findAll({
     order: [
       ['createdAt', 'DESC']
     ],
-    raw: true,
+    // raw: true,
     attributes: ['id', 'title', 'body', 'createdAt', 'friendlyUrl'],
-    include: [{
-      model: db.User,
-      attributes: ['username'],
-    }],
-    
+    include: [
+      { 
+        model: db.Tag,
+        attributes: ['name'],
+        where: {
+          name: tag,
+        }
+      },
+      {
+        model: db.User,
+        attributes: ['username']
+      }
+    ]
   })
   .then(posts => res.json(posts));
-  // res.send('posts -> wysyłanie danych przez POST i utworzenie postu');
 });
 
-router.use(adminMiddleware);
-
-router.post('/posts', (req, res) => {
+authRouter.post('/posts', (req, res) => {
   const title = req.body.title;
   const body = req.body['body'] || loremIpsum({ 
     count: 2, 
@@ -175,48 +240,69 @@ router.post('/posts', (req, res) => {
     paragraphUpperBound: 5,
     format: 'html'
   });
+  
   if(!title || !body) {
     return res.json({
       success: false,
       message: 'An error occured.'
     });
   }
+
   const friendlyUrl = req.body.friendlyUrl || title.split(' ').map((word) => word.toLowerCase()).join('-');
-  // res.json({
-  //   title,
-  //   body,
-  //   friendlyUrl
-  // });
-  const user = req.user.id;
-  console.log(user);
-  db.Post.create({
-    title: title,
-    body: body,
-    friendlyUrl: friendlyUrl,
-    UserId: req.user.id,
+  const UserId = req.user.id;
+  const tags = req.body.tags;
+  let tagsList = tags.split(' ').map((el) => {
+    return {
+      name: el,
+    };
+  });
+
+  const post = {
+    title,
+    body,
+    friendlyUrl,
+    UserId,
+    Tags: tagsList,
+  }
+ console.log(tagsList);
+  // if(tags) {
+  //   let tagsList = tags.split(' ').map((el) => {
+  //     return {
+  //       name: el,
+  //     };
+  //   });
+  //   post['Tags'] = tagsList;
+  // }
+  db.Post.create(post, {
+    include: [ db.Tag ]
+  })
+  .then(post => {
+    return post;
   })
   .then((post) => {
     console.log(`Post ${post.title} zostal stworzony pomyslnie!`);
-    res.json({
+    return res.json({
       success: true,
-      message: 'Post created successfully.'
+      message: 'Post created successfully.',
+      post,
     });
   })
   .catch((err) => {
     console.log(`Nie powiodlo sie utworzenie posta :(`);
-    res.json({
+    return res.json({
       success: false,
       message: 'An error occured.',
+      err,
     });
   });
 });
 
 
-router.put('/posts/:id', (req, res) => {
+authRouter.put('/posts/:id', (req, res) => {
   res.send(`post -> update posta od id ${req.params.id}`);
 });
 
-router.delete('/posts/:id', (req, res) => {
+authRouter.delete('/posts/:id', (req, res) => {
   const postID = req.params.id;
   db.Post.findOne({
     where: {
@@ -244,7 +330,7 @@ router.delete('/posts/:id', (req, res) => {
 * categories api
 */
 
-router.route('/categories')
+authRouter.route('/categories')
   .get((req, res) => {
     res.send(`pobranie info o wszystkich kategoriach`);
   })
@@ -252,7 +338,7 @@ router.route('/categories')
     res.send(`dodanie nowej kategorii`);
   });
 
-router.route('/categories/:id')
+authRouter.route('/categories/:id')
   .get((req, res) => {
     res.send(`pobranie info o kategorii nr ${req.params.id}`);
   })
@@ -263,4 +349,5 @@ router.route('/categories/:id')
     res.send(`update kategorii nr ${req.params.id}`);
   });
 
-module.exports = router;
+module.exports.authRouter = authRouter;
+module.exports.openRouter = openRouter;

@@ -42,7 +42,6 @@
               
 </template>
 <script>
-import Auth from '@/services/auth';
 
 export default {
   name: 'login',
@@ -58,32 +57,19 @@ export default {
     };
   },
   methods: {
-    loginUser() {
+    async loginUser() {
       const credentials = {
         username: this.user.username,
         password: this.user.password,
       };
-      Auth.login(credentials)
-      .then((res) => {
-        this.isLoading = true;
-        return res;
-      })
-      .then((res) => {
-        if (res.data.success) {
-          Auth.setToken(res.data.token);
-          Auth.setProfile(res.data.user);
-          // this.$store.commit('SET_TOKEN', res.data.token);
-          this.$router.push('/panel');
-        } else {
-          this.error = res.data.message;
-        }
-      })
-      .catch(() => {
-        this.error = 'Unexpected error';
-      })
-      .then(() => {
-        this.isLoading = false;
-      });
+      const isLogged = await this.$store.dispatch('LOGIN_USER', credentials);
+      if (isLogged.success) {
+        console.log('xDDDDDDDDD przenosze');
+        this.$router.push({ name: 'IndexPanel' });
+      } else {
+        console.log('xDDDDD błond');
+        this.error = isLogged.message;
+      }
     },
   },
 };

@@ -10,6 +10,12 @@ import Register from '@/components/Register';
 import AddPost from '@/components/views/AddPost';
 import ShowPosts from '@/components/views/ShowPosts';
 import Dashboard from '@/components/views/Dashboard';
+import Profile from '@/components/views/Profile';
+
+import LoadPost from '@/components/LoadPost';
+
+import LoadingSpinner from '@/components/LoadingSpinner';
+import store from '@/store';
 
 Vue.use(Router);
 
@@ -17,10 +23,16 @@ const router = new Router({
   mode: 'history',
   routes: [
     {
-      path: '/',
-      name: 'Index',
-      component: Index,
+      path: '/spinner',
+      name: 'Spinner',
+      component: LoadingSpinner,
     },
+    {
+      path: '/loadpost',
+      name: 'LoadPost',
+      component: LoadPost,
+    },
+
     {
       path: '/zaloguj',
       name: 'Login',
@@ -53,19 +65,34 @@ const router = new Router({
           name: 'AddPost',
           component: AddPost,
         },
+        {
+          path: 'profil',
+          name: 'Profile',
+          component: Profile,
+        },
       ],
     },
     {
-      path: '/:friendlyUrl/',
-      name: 'ShowPost',
-      component: ShowPost,
+      path: '/',
+      name: 'Index',
+      component: Index,
+      children: [
+        {
+          path: ':friendlyUrl',
+          name: 'ShowPost',
+          component: ShowPost,
+        },
+        {
+          path: '/tag/:name',
+        },
+      ],
     },
   ],
 });
 
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!localStorage.getItem('token')) {
+    if (!store.getters.isAuthenticated) {
       next({
         path: '/zaloguj',
         query: {

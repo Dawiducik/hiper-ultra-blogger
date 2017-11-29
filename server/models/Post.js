@@ -19,7 +19,7 @@ module.exports = (sequelize, dataTypes) => {
       unique: true
     }
   }, {
-    tableName: 'post',
+    // tableName: 'post',
     timestamps: true
   });
   return Post;

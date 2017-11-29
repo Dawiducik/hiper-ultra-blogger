@@ -41,7 +41,8 @@ app.use(cookieParser());
 //   next();
 // })
 
-app.use('/api', apiRoutes);
+app.use('/api', apiRoutes.openRouter);
+app.use('/api', apiRoutes.authRouter);
 // app.use('/', indexRoutes);
 
 // catch 404 and forward to error handler

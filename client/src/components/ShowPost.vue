@@ -1,7 +1,7 @@
 <template lang="pug">
   div
-    div(v-if="isLoading") Loading... 
-    div(v-if="error") Error {{ error }}
+    //- div(v-if="isLoading") Loading... 
+    //- div(v-if="error") Error {{ error }}
     .jumbotron(v-if="post")
       h1.display-3 {{ post.title }}
       p.lead
@@ -18,36 +18,29 @@
 
 </template>
 <script>
-import http from '@/providers/http';
+import { mapActions, mapGetters } from 'vuex';
 
 export default {
   name: 'showPost',
-  data() {
-    return {
-      isLoading: false,
-      error: null,
-      post: null,
-    };
-  },
+  // data() {
+  //   return {
+  //     isLoading: false,
+  //     error: null,
+  //     post: null,
+  //   };
+  // },
   methods: {
-    loadPost() {
-      this.loading = true;
-      const friendlyUrl = this.$route.params.friendlyUrl;
-      http({
-        url: `http://localhost:8081/api/posts/${friendlyUrl}`,
-        method: 'get',
-      })
-      .then((res) => {
-        this.post = res.data;
-      })
-      .catch((res) => {
-        this.error = res.data.message;
-      });
-      this.isLoading = false;
-    },
+    ...mapActions({
+      loadPost: 'LOAD_POST_BY_FRIENDLYURL',
+    }),
   },
   created() {
-    this.loadPost();
+    this.loadPost(this.$route.params.friendlyUrl);
+  },
+  computed: {
+    ...mapGetters({
+      post: 'latestPost',
+    }),
   },
 };
 </script>

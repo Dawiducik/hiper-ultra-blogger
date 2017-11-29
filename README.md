@@ -1,13 +1,32 @@
-## client
+# HIPER-ULTRA-BLOGGER
+Blog oparty na Node.js & Vue.js
+
+## Jak odpalić
+Do uruchomienia:
+
++ Node.js >= 8.7.0 [(klik)](https://nodejs.org/en/download/current/)
+
+## Instalacja
+
+#### Klient
 ``` bash
 cd client
 npm install
-npm run dev
+npm start
 ```
 
-## server
+#### Serwer
 ``` bash
 cd server
+cd config
+xcopy index.example.js index.js (windows)
 npm install
-npm run start
+npm start
 ```
+
+## Wykorzystano
++ NodeJS
++ ExpressJS
++ VueJS 
++ Sequelize (ORM)
++ Axios

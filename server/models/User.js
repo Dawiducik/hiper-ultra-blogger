@@ -15,7 +15,7 @@ module.exports = (sequelize, dataTypes) => {
       required: true
     },
   }, {
-    tableName: 'user',
+    // tableName: 'user',
     timestamps: true
   });
   return User;

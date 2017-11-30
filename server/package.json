@@ -4,7 +4,8 @@
   "private": true,
   "author": "Dawiducik",
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js"
   },
   "dependencies": {
     "bcrypt": "^1.0.3",
@@ -20,9 +21,7 @@
     "nodemon": "^1.12.1",
     "pg": "^7.4.0",
     "sequelize": "^4.11.1",
-    "serve-favicon": "~2.4.2"
-  },
-  "devDependencies": {
+    "serve-favicon": "~2.4.2",
     "cors": "^2.8.4",
     "lorem-ipsum": "^1.0.4"
   }

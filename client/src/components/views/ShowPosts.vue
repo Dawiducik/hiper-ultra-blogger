@@ -48,7 +48,7 @@ export default {
     loadPosts() {
       this.isLoading = true;
       http({
-        url: 'http://localhost:8081/api/posts',
+        url: `${this.$store.getters.apiUrl}/posts`,
         method: 'get',
       })
       .then((res) => {
@@ -62,7 +62,7 @@ export default {
     deletePost(id) {
       const postToDeleteID = id;
       http({
-        url: `http://localhost:8081/api/posts/${postToDeleteID}`,
+        url: `${this.$store.getters.apiUrl}/posts/${postToDeleteID}`,
         method: 'delete',
         data: {
           postID: postToDeleteID,

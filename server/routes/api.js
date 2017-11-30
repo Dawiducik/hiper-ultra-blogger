@@ -46,7 +46,7 @@ openRouter.post('/users/login', (req, res) => {
         success: false,
         message: 'An error occured: invalid username and/or password.'
       });
-      let token = jwt.sign({ user }, config.jwtToken.secretKey, config.jwtToken.options);
+      let token = jwt.sign({ user }, process.env.JWT_TOKEN_SECRET || config.jwtToken.secretKey, config.jwtToken.options);
       return res.json({
         success: true,
         message: 'Enjoy your token ヽ༼ຈل͜ຈ༽ﾉ',

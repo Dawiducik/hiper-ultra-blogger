@@ -10,7 +10,7 @@ module.exports = (req, res, next) => {
       message: 'No token provided.',
     });
   } 
-  jwt.verify(token, config.jwtToken.secretKey, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_TOKEN_SECRET || config.jwtToken.secretKey, (err, decoded) => {
     if(err) {
       return res.status(403).json({
         success: false,

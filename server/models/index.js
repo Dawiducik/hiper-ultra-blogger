@@ -13,18 +13,32 @@ let database = {};
 //   // SQLite only
 //   storage: 'path/to/database.sqlite'
 // });
-const sequelize = new Sequelize('postgres://abcalcdsmhyblm:ae6413082cf096ad3337459ceda1c5d860da0114843915e644522b98cbfa0b2b@ec2-54-75-224-100.eu-west-1.compute.amazonaws.com:5432/dfqtcigikfbesg');
+let sequelize;
+if(process.env.DATABASE_URL) {
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    dialectOptions: {
+      ssl: true
+    }
+  });
+} else {
+  sequelize = new Sequelize(process.env.DATABASE_NAME || config.database.dbName, process.env.DATABASE_USERNAME || config.database.username, process.env.DATABASE_PASSWORD || config.database.password, {
+    host: process.env.DATABASE_HOSTNAME || config.database.host,
+    dialect: process.env.DATABASE_TYPE || config.database.type,
+    pool: {
+      max: 5,
+      min: 0,
+      idle: 10000
+    },
+    // SQLite only
+    storage: 'path/to/database.sqlite'
+  });
+}
 database.sequelize = sequelize;
 
 const User = sequelize.import('./User.js');
 const Post = sequelize.import('./Post.js');
 const Tag = sequelize.import('./Tag.js');
-// const Tag = sequelize.define('tag', {
-//   name: Sequelize.STRING
-// }, {
-//   timestamps: false,
-// });
-// const PostTags = sequelize.import('./PostTag.js');
 
 database['User'] = User;
 database['Post'] = Post;
@@ -50,46 +64,6 @@ sequelize
 
 
 
-// const Product = sequelize.define('product', {
-//   title: Sequelize.STRING
-// });
-// const Tag2 = sequelize.define('tag', {
-//   name: Sequelize.STRING
-// }, {
-//   timestamps: false,
-// });
-
-// Product.belongsToMany(Tag2, { through: 'productsTags' });
-// Tag2.belongsToMany(Product, { through: 'productsTags' });
-// sequelize.sync({ force: true })
-// .then(() => {
-//   Product.create({
-//     id: 1,
-//     title: 'Chair',
-//     tags: [
-//       { name: 'Alpha' },
-//       { name: 'Beta' }
-//     ]
-//   }, {
-//     include: [ Tag2 ]
-//   })
-//   .then(product => console.log(product.tags))
-//   .then(() => {
-//     Product.create({
-//       id: 2,
-//       title: 'Makrela',
-//       tags: [
-//         { name: 'Alpha' },
-//         { name: 'Gamma' }
-//       ]
-//     }, {
-//       include: [ Tag2 ]
-//     });
-//   })
-// });
-
-
-
 const hash = bcrypt.hashSync('haslo1', config.password.saltRounds);
 database.sequelize
   .sync({ force: true })
@@ -98,29 +72,6 @@ database.sequelize
       username: 'Dawid3k',
       password: hash,
     })
-    // .then(user => {
-    //   console.log(user.id); 
-    //   Post.create({
-    //     title: 'Muj pierwsszy post',
-    //     body: '<p> sdf </p>',
-    //     friendlyUrl: 'fsdfsdf-fsdfsd-fsdfsd',
-    //     UserId: user.id,
-    //     tags: [
-    //       {
-    //         name: 'lubie',
-    //       },
-    //       {
-    //         name: 'placki',
-    //       }
-    //     ],
-    //   }, {
-    //     include: [ Tag ],
-    //   })
-    //   .then(post => console.log(post));
-    // })
-    // .catch(err => {
-    //   console.log(err);
-    // });
   });
 
 module.exports = database;

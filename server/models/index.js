@@ -18,7 +18,7 @@ if(process.env.DATABASE_URL) {
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     dialectOptions: {
-      ssl: true
+      ssl: false
     }
   });
 } else {
@@ -35,6 +35,7 @@ if(process.env.DATABASE_URL) {
   });
 }
 database.sequelize = sequelize;
+database.Sequelize = Sequelize;
 
 const User = sequelize.import('./User.js');
 const Post = sequelize.import('./Post.js');

@@ -12,9 +12,9 @@ import ShowPosts from '@/components/views/ShowPosts';
 import Dashboard from '@/components/views/Dashboard';
 import Profile from '@/components/views/Profile';
 
-import LoadPost from '@/components/LoadPost';
+import UploadFile from '@/components/UploadFile';
 
-import LoadingSpinner from '@/components/LoadingSpinner';
+import ShowPostsByTag from '@/components/ShowPostsByTag';
 import store from '@/store';
 
 Vue.use(Router);
@@ -23,16 +23,15 @@ const router = new Router({
   mode: 'history',
   routes: [
     {
-      path: '/spinner',
-      name: 'Spinner',
-      component: LoadingSpinner,
+      path: '/',
+      name: 'Index',
+      component: Index,
     },
     {
-      path: '/loadpost',
-      name: 'LoadPost',
-      component: LoadPost,
+      path: '/upload',
+      name: 'Upload',
+      component: UploadFile,
     },
-
     {
       path: '/zaloguj',
       name: 'Login',
@@ -73,19 +72,14 @@ const router = new Router({
       ],
     },
     {
-      path: '/',
-      name: 'Index',
-      component: Index,
-      children: [
-        {
-          path: ':friendlyUrl',
-          name: 'ShowPost',
-          component: ShowPost,
-        },
-        {
-          path: '/tag/:name',
-        },
-      ],
+      path: '/:friendlyUrl',
+      name: 'ShowPost',
+      component: ShowPost,
+    },
+    {
+      path: '/tag/:name',
+      name: 'ShowPostsByTag',
+      component: ShowPostsByTag,
     },
     {
       path: '*',

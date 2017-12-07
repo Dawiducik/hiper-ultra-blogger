@@ -5,24 +5,25 @@
   "author": "Dawiducik",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "SET ENV=development && nodemon app.js"
   },
   "dependencies": {
-    "bcrypt": "^1.0.3",
+    "bcrypt": "^1.0.1",
     "body-parser": "~1.17.1",
     "cookie-parser": "~1.4.3",
+    "cors": "^2.8.4",
     "debug": "~2.6.3",
     "dotenv": "^4.0.0",
     "express": "~4.15.2",
     "jade": "~1.11.0",
     "jsonwebtoken": "^8.0.1",
+    "lorem-ipsum": "^1.0.4",
     "morgan": "~1.8.1",
+    "multer": "^1.3.0",
     "mysql2": "^1.4.2",
     "nodemon": "^1.12.1",
     "pg": "^7.4.0",
     "sequelize": "^4.11.1",
-    "serve-favicon": "~2.4.2",
-    "cors": "^2.8.4",
-    "lorem-ipsum": "^1.0.4"
+    "serve-favicon": "~2.4.2"
   }
 }

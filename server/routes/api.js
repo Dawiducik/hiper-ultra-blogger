@@ -5,6 +5,17 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const loremIpsum = require('lorem-ipsum');
 
+const multer = require('multer');
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'static/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
+
 const adminMiddleware = require('../middlewares/admin');
 const db = require('../models');
 const config = require('../config');
@@ -20,6 +31,14 @@ authRouter.use(adminMiddleware);
 // router.use((req, res, next) => {
 
 // });
+/* 
+* upload api
+*/
+openRouter.post('/upload', upload.single('avatar'),  (req, res) => {
+  return res
+    .send(req.file);
+});
+
 /*
 * users api
 */
@@ -174,28 +193,60 @@ openRouter.get('/posts', (req, res) => {
   .then(posts => res.json(posts));
   // res.send('posts -> wysyłanie danych przez POST i utworzenie postu');
 });
-
-openRouter.get('/posts/furl/:friendlyUrl', (req, res) => {
-  db.Post.findOne({
-    where: {
-      friendlyUrl: req.params.friendlyUrl
-    },
-
-    include: [{
-      model: db.User,
+openRouter.get('/posts/contains/:phrase', async (req, res, next) => {
+  try {
+    const posts = await db.Post.findAll({
       where: {
-        id: db.sequelize.col('Post.UserId')
+        title: {
+          $like: `%${req.params.phrase}%`,
+        },
       },
-      attributes: ['username']
-    }]
-  })
-  .then(post => res.json(post))
-  .catch((err) => {
-    res.json({
-      success: false,
-      message: 'Post does not exists.'
+      include: [
+        { 
+          model: db.Tag,
+          attributes: ['name'] 
+        },
+        {
+          model: db.User,
+          attributes: ['username']
+        }
+      ]
     });
-  });
+    if(!posts.length) throw new Error('Posts not found.');
+    return res.status(200).json(posts);
+  } catch(e) {
+    return res.status(404).json({
+      success: false,
+      message: e.message
+    });
+  }
+  
+  // res.send(`post o id ${req.params.friendlyUrl}->  pobiera informacje o poście tj. tło, treść, autor itp...`);
+});
+openRouter.get('/posts/furl/:friendlyUrl', async (req, res, next) => {
+  try {
+    const post = await db.Post.findOne({
+      where: {
+        friendlyUrl: req.params.friendlyUrl
+      },
+
+      include: [{
+        model: db.User,
+        where: {
+          id: db.sequelize.col('Post.UserId')
+        },
+        attributes: ['username']
+      }]
+    });
+    if(!post) throw new Error('Post does not exists.');
+    return res.status(200).json(post);
+  } catch(e) {
+    return res.status(404).json({
+      success: false,
+      message: e.message
+    });
+  }
+  
   // res.send(`post o id ${req.params.friendlyUrl}->  pobiera informacje o poście tj. tło, treść, autor itp...`);
 });
 
@@ -205,30 +256,37 @@ openRouter.get('/posts/pagination/:page/:amount', (req, res) => {
   const amount = req.params.amount;
 });
 
-openRouter.get('/posts/tag/:tag', (req, res) => {
+openRouter.get('/posts/tag/:tag', async (req, res) => {
   const tag = req.params.tag;
-  db.Post
-  .findAll({
-    order: [
-      ['createdAt', 'DESC']
-    ],
-    // raw: true,
-    attributes: ['id', 'title', 'body', 'createdAt', 'friendlyUrl'],
-    include: [
-      { 
-        model: db.Tag,
-        attributes: ['name'],
-        where: {
-          name: tag,
+  try {
+    const posts = await db.Post.findAll({
+      order: [
+        ['createdAt', 'DESC']
+      ],
+      // raw: true,
+      attributes: ['id', 'title', 'body', 'createdAt', 'friendlyUrl'],
+      include: [
+        { 
+          model: db.Tag,
+          attributes: ['name'],
+          where: {
+            name: tag,
+          }
+        },
+        {
+          model: db.User,
+          attributes: ['username']
         }
-      },
-      {
-        model: db.User,
-        attributes: ['username']
-      }
-    ]
-  })
-  .then(posts => res.json(posts));
+      ]
+    });
+    if(!posts) throw new Error(`No posts with ${tag} tag found.`);
+    return res.status(200).json(posts);
+  } catch(e) {
+    return res.json({
+      success: false,
+      message: e.message,
+    });
+  }
 });
 
 authRouter.post('/posts', (req, res) => {

@@ -1,6 +1,5 @@
 <template lang="pug">
   div
-  
     nav.navbar.navbar-expand-lg.navbar-light.bg-light
       a.navbar-brand(href="#")
         img(src="../assets/logo.png", height="30")
@@ -28,22 +27,31 @@
             a.nav-link Zaloguj
             
     div(v-if="error") {{ error }}
-    div(v-if="posts")
+    .container 
+      .row
+          .col-md-12
+            form
+              .form-group
+                input#searchInput.form-control.form-control-lg(
+                    name="searchPhrase", 
+                    type="text", 
+                    placeholder="Wyszukiwana fraza...", 
+                    autocomplete="off",
+                    v-model="searchPhrase",
+                    @keyup.prevent="search()",
+                  ) 
+    div.container(v-if="posts")
+      
       .row(v-for="post in posts")
         .col-md-12
           post(
             :title="post.title",
             :body="post.body",
             :createdAt="post.createdAt",
-            :author="post['User.username']",
+            :author="post.User.username",
             :friendlyUrl="post.friendlyUrl",
             :tags="post.Tags"
           )
-    div 
-      router-link(to="/zaloguj")
-        button.btn.btn-primary Zaloguj się
-      router-link(to="/panel")
-        button.btn.btn-success Dashboard
 </template>
 <script>
 import Post from '@/components/Post';
@@ -59,6 +67,7 @@ export default {
     return {
       posts: null,
       error: null,
+      searchPhrase: '',
     };
   },
   computed: {
@@ -83,6 +92,20 @@ export default {
       })
       .catch(() => {
         this.error = 'Błąd przy wczytywaniu postów';
+      });
+    },
+    search() {
+      console.log(this.searchPhrase);
+      if (this.searchPhrase.length < 2) return;
+      http({
+        url: `${this.apiUrl}/posts/contains/${this.searchPhrase}`,
+      })
+      .then((res) => {
+        this.posts = res.data;
+      })
+      .catch(() => {
+        this.posts = null;
+        this.error = 'Błąd';
       });
     },
     logout() {

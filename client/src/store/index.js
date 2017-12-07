@@ -9,6 +9,7 @@ function getCoffee() {
   });
 }
 const API_URL = 'https://hub-server.herokuapp.com/api';
+// const API_URL = 'http://localhost:8081/api';
 const store = new Vuex.Store({
   state: {
     API_URL,
@@ -50,7 +51,7 @@ const store = new Vuex.Store({
     LOAD_POST_BY_FRIENDLYURL({ commit, state }, furl) {
       console.log('wywoluje akcje load post by id ', furl);
       Http({
-        url: `${API_URL}/posts/${furl}`,
+        url: `${API_URL}/posts/furl/${furl}`,
         method: 'get',
       })
       .then((res) => {
@@ -116,6 +117,31 @@ const store = new Vuex.Store({
         };
       } finally {
         commit('TOGGLE_LOADING');
+      }
+    },
+    async LOAD_POSTS_BY_TAGNAME({ commit }, tagName) {
+      console.log('laduje posty');
+      try {
+        commit('TOGGLE_LOADING');
+        commit('SET_LOADING_RESOURCE', 'ŁADUJĘ POSTY');
+        await getCoffee();
+        const request = await Http({
+          url: `${API_URL}/posts/tag/${tagName}`,
+        });
+        console.log(request.data);
+        console.log(request);
+        if (!request.data) {
+          throw new Error(request.data.message);
+        }
+        return request.data;
+      } catch (e) {
+        return {
+          success: false,
+          message: e.message,
+        };
+      } finally {
+        commit('TOGGLE_LOADING');
+        console.log('skonczylem ladowac posty');
       }
     },
     LOGOUT_USER({ commit }) {

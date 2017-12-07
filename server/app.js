@@ -4,6 +4,9 @@ const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const multer = require('multer');
+
+const upload = multer({ dest: `static/` });
 const models = require('./models');
 
 const apiRoutes = require('./routes/api');
@@ -40,9 +43,8 @@ app.use(cookieParser());
 //   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, authorization-token");
 //   next();
 // })
-
-app.use('/api', apiRoutes.openRouter);
-app.use('/api', apiRoutes.authRouter);
+app.use('/static', express.static('static'));
+app.use('/api', [apiRoutes.openRouter, apiRoutes.authRouter]);
 // app.use('/', indexRoutes);
 
 // catch 404 and forward to error handler
